@@ -292,6 +292,75 @@ void gen_statement(ASTNode* node, TACCode* code) {
             break;
         }
 
+        case NODE_IF: {
+            /* If statement: if (condition) { then_branch } [else { else_branch }]
+             *
+             * WITHOUT else:                  WITH else:
+             *   cond_temp = condition          cond_temp = condition
+             *   if_false cond_temp goto L_end  if_false cond_temp goto L_else
+             *   <then_branch>                  <then_branch>
+             * L_end:                           goto L_end
+             *                                L_else:
+             *                                  <else_branch>
+             *                                L_end:
+             */
+
+            char* label_end = new_label();
+            char* label_else = NULL;
+
+            /* Evaluate condition */
+            char* cond_result = gen_expression(node->data.if_stmt.condition, code);
+
+            if (node->data.if_stmt.else_branch != NULL) {
+                /* Has else branch */
+                label_else = new_label();
+
+                /* if_false cond_result goto L_else */
+                TACInstruction* if_false = create_tac_instruction(TAC_IF_FALSE,
+                                                                  NULL, cond_result,
+                                                                  NULL, label_else);
+                append_tac(code, if_false);
+
+                /* Generate then branch */
+                gen_statement(node->data.if_stmt.then_branch, code);
+
+                /* goto L_end (skip else) */
+                TACInstruction* goto_end = create_tac_instruction(TAC_GOTO,
+                                                                  NULL, NULL,
+                                                                  NULL, label_end);
+                append_tac(code, goto_end);
+
+                /* L_else: */
+                TACInstruction* else_label = create_tac_instruction(TAC_LABEL,
+                                                                    NULL, NULL,
+                                                                    NULL, label_else);
+                append_tac(code, else_label);
+
+                /* Generate else branch */
+                gen_statement(node->data.if_stmt.else_branch, code);
+
+            } else {
+                /* No else branch */
+
+                /* if_false cond_result goto L_end */
+                TACInstruction* if_false = create_tac_instruction(TAC_IF_FALSE,
+                                                                  NULL, cond_result,
+                                                                  NULL, label_end);
+                append_tac(code, if_false);
+
+                /* Generate then branch */
+                gen_statement(node->data.if_stmt.then_branch, code);
+            }
+
+            /* L_end: */
+            TACInstruction* end_label = create_tac_instruction(TAC_LABEL,
+                                                               NULL, NULL,
+                                                               NULL, label_end);
+            append_tac(code, end_label);
+
+            break;
+        }
+
         case NODE_STATEMENT_LIST: {
             /* Statement list: generate code for each statement */
             gen_statement(node->data.stmt_list.statement, code);

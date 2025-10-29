@@ -299,6 +299,29 @@ void analyze_statement(ASTNode* node, SymbolTable* symtab) {
             break;
         }
 
+        case NODE_IF: {
+            /* If statement: if (condition) { then_branch } [else { else_branch }] */
+            printf("[SEMANTIC] Analyzing if statement...\n");
+
+            /* Analyze the condition */
+            DataType cond_type = analyze_expression(node->data.if_stmt.condition, symtab);
+
+            if (cond_type == TYPE_UNKNOWN) {
+                /* Error already reported */
+            }
+
+            /* Analyze the then branch */
+            analyze_statement(node->data.if_stmt.then_branch, symtab);
+
+            /* Analyze the else branch if it exists */
+            if (node->data.if_stmt.else_branch) {
+                analyze_statement(node->data.if_stmt.else_branch, symtab);
+            }
+
+            printf("[SEMANTIC] If statement verified\n");
+            break;
+        }
+
         case NODE_STATEMENT_LIST: {
             /* Statement list: recursively analyze each statement */
             analyze_statement(node->data.stmt_list.statement, symtab);

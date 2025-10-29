@@ -21,6 +21,7 @@ typedef enum {
     NODE_ASSIGNMENT,        /* Assignment: x = expr; */
     NODE_PRINT,            /* Print statement: print(expr); */
     NODE_WHILE,            /* While loop: while (cond) { stmts } */
+    NODE_IF,               /* If statement: if (cond) { stmts } [else { stmts }] */
     NODE_CONDITION,        /* Condition for while: expr relop expr */
     NODE_BINARY_OP,        /* Binary operation: expr + expr */
     NODE_IDENTIFIER,       /* Identifier (variable name) */
@@ -74,6 +75,13 @@ typedef struct ASTNode {
             struct ASTNode* condition;
             struct ASTNode* body;
         } while_loop;
+
+        /* For if statements (NEW FEATURE) */
+        struct {
+            struct ASTNode* condition;
+            struct ASTNode* then_branch;
+            struct ASTNode* else_branch;  /* NULL if no else */
+        } if_stmt;
 
         /* For statement lists */
         struct {
@@ -155,6 +163,9 @@ ASTNode* create_print_node(ASTNode* expr);
 
 /* Create a while loop node: while (cond) { body } (NEW FEATURE) */
 ASTNode* create_while_node(ASTNode* condition, ASTNode* body);
+
+/* Create an if statement node: if (cond) { then_branch } [else { else_branch }] (NEW FEATURE) */
+ASTNode* create_if_node(ASTNode* condition, ASTNode* then_branch, ASTNode* else_branch);
 
 /* Create a condition node: expr relop expr (NEW FEATURE) */
 ASTNode* create_condition_node(ASTNode* left, char* op, ASTNode* right);

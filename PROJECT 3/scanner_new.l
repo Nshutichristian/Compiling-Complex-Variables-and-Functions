@@ -30,6 +30,8 @@ WS          [ \t]
 "return"        { update_location(); yylval.str = strdup(yytext); return RETURN; }
 "print"         { update_location(); yylval.str = strdup(yytext); return PRINT; }
 "while"         { update_location(); yylval.str = strdup(yytext); return WHILE; }
+"if"            { update_location(); yylval.str = strdup(yytext); return IF; }
+"else"          { update_location(); yylval.str = strdup(yytext); return ELSE; }
 
 {ID}            { update_location(); yylval.str = strdup(yytext); return ID; }
 {NUM}           { update_location(); yylval.num = atoi(yytext); return NUM; }

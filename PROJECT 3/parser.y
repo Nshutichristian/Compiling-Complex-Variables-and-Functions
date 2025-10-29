@@ -63,6 +63,8 @@ int syntax_errors = 0;
 %token <str> INT         /* Keyword: int */
 %token <str> PRINT       /* Keyword: print */
 %token <str> WHILE       /* Keyword: while (NEW FEATURE) */
+%token <str> IF          /* Keyword: if (NEW FEATURE) */
+%token <str> ELSE        /* Keyword: else (NEW FEATURE) */
 %token <str> ASSIGN      /* Operator: = */
 %token <str> PLUS        /* Operator: + */
 %token <str> MINUS       /* Operator: - */
@@ -96,6 +98,7 @@ int syntax_errors = 0;
 %type <node> assignment
 %type <node> print_stmt
 %type <node> while_stmt
+%type <node> if_stmt
 %type <node> return_stmt
 %type <node> condition
 %type <node> expression
@@ -167,7 +170,7 @@ statement_list:
     }
     ;
 
-/* Statement: Can be a declaration, assignment, print, while loop, or return */
+/* Statement: Can be a declaration, assignment, print, while loop, if statement, or return */
 statement:
     var_declaration
     {
@@ -182,6 +185,10 @@ statement:
         $$ = $1;
     }
     | while_stmt
+    {
+        $$ = $1;
+    }
+    | if_stmt
     {
         $$ = $1;
     }
@@ -250,6 +257,20 @@ while_stmt:
     {
         $$ = create_while_node($3, $6);
         printf("[PARSER] While loop: while (<condition>) { <statements> }\n");
+    }
+    ;
+
+/* If statement: if (condition) { statement_list } [else { statement_list }] */
+if_stmt:
+    IF LPAREN condition RPAREN LBRACE statement_list RBRACE
+    {
+        $$ = create_if_node($3, $6, NULL);
+        printf("[PARSER] If statement: if (<condition>) { <statements> }\n");
+    }
+    | IF LPAREN condition RPAREN LBRACE statement_list RBRACE ELSE LBRACE statement_list RBRACE
+    {
+        $$ = create_if_node($3, $6, $10);
+        printf("[PARSER] If-else statement: if (<condition>) { <statements> } else { <statements> }\n");
     }
     ;
 

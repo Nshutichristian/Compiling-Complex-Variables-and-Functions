@@ -68,6 +68,15 @@ ASTNode* create_while_node(ASTNode* condition, ASTNode* body) {
     return node;
 }
 
+/* Create an if statement node: if (condition) { then_branch } [else { else_branch }] (NEW FEATURE) */
+ASTNode* create_if_node(ASTNode* condition, ASTNode* then_branch, ASTNode* else_branch) {
+    ASTNode* node = create_ast_node(NODE_IF);
+    node->data.if_stmt.condition = condition;
+    node->data.if_stmt.then_branch = then_branch;
+    node->data.if_stmt.else_branch = else_branch;  /* Can be NULL */
+    return node;
+}
+
 /* Create a condition node: expr relop expr (NEW FEATURE) */
 ASTNode* create_condition_node(ASTNode* left, char* op, ASTNode* right) {
     ASTNode* node = create_ast_node(NODE_CONDITION);
@@ -184,6 +193,7 @@ const char* node_type_to_string(NodeType type) {
         case NODE_ASSIGNMENT:     return "ASSIGNMENT";
         case NODE_PRINT:          return "PRINT";
         case NODE_WHILE:          return "WHILE";
+        case NODE_IF:             return "IF";
         case NODE_CONDITION:      return "CONDITION";
         case NODE_BINARY_OP:      return "BINARY_OP";
         case NODE_IDENTIFIER:     return "IDENTIFIER";
@@ -247,6 +257,21 @@ void print_ast(ASTNode* node, int indent) {
             for (int i = 0; i < indent + 1; i++) printf("  ");
             printf("BODY:\n");
             print_ast(node->data.while_loop.body, indent + 2);
+            break;
+
+        case NODE_IF:
+            printf("IF (line %d)\n", node->line_number);
+            for (int i = 0; i < indent + 1; i++) printf("  ");
+            printf("CONDITION:\n");
+            print_ast(node->data.if_stmt.condition, indent + 2);
+            for (int i = 0; i < indent + 1; i++) printf("  ");
+            printf("THEN:\n");
+            print_ast(node->data.if_stmt.then_branch, indent + 2);
+            if (node->data.if_stmt.else_branch) {
+                for (int i = 0; i < indent + 1; i++) printf("  ");
+                printf("ELSE:\n");
+                print_ast(node->data.if_stmt.else_branch, indent + 2);
+            }
             break;
 
         case NODE_CONDITION:
@@ -372,6 +397,14 @@ void free_ast(ASTNode* node) {
         case NODE_WHILE:
             free_ast(node->data.while_loop.condition);
             free_ast(node->data.while_loop.body);
+            break;
+
+        case NODE_IF:
+            free_ast(node->data.if_stmt.condition);
+            free_ast(node->data.if_stmt.then_branch);
+            if (node->data.if_stmt.else_branch) {
+                free_ast(node->data.if_stmt.else_branch);
+            }
             break;
 
         case NODE_CONDITION:
